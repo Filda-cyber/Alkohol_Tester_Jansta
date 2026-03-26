@@ -217,8 +217,18 @@ function App() {
             </div>
           ))}
         </div>
-
-        <button className="calculate-btn" onClick={calculate}>Vypočítat stav</button>
+<div className="button-group" style={{ display: 'flex', gap: '10px' }}>
+   <button className="calculate-btn" onClick={calculate}>Vypočítat stav</button>
+    
+    <button 
+      className="calculate-btn" 
+      onClick={reset} 
+      style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}
+    >
+      Smazat vše
+    </button>
+  </div>
+        
 
         {result && (
           <div className="result">
@@ -232,19 +242,7 @@ function App() {
                 <p>{result.maxPromile.toFixed(2)} ‰</p>
               </div>
             </div>
-<div className="button-group" style={{ display: 'flex', gap: '10px' }}>
-    <button className="calculate-btn" onClick={calculate}>
-      Vypočítat stav
-    </button>
-    
-    <button 
-      className="calculate-btn" 
-      onClick={reset} 
-      style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}
-    >
-      Smazat vše
-    </button>
-  </div>
+
             <div className="drive-info">
               <p>Střízlivost cca za: <strong>{result.hoursToSober} h</strong></p>
               <p>Řídit můžete v: <strong>{result.driveTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong></p>

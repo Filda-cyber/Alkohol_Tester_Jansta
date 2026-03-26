@@ -18,25 +18,25 @@ const DRINK_ICONS = {
 
 const DRINKS = {
   beer: [
-    { name: "Pivo 10°", abv: 0.04, volumes: [500] },
-    { name: "Pivo 12°", abv: 0.05, volumes: [500] },
-    { name: "Ležák", abv: 0.055, volumes: [500] }
+    { name: "Pivo 10°", abv: 0.04, volumes: [330, 500, 1000] },
+    { name: "Pivo 12°", abv: 0.05, volumes: [330, 500, 1000] },
+    
   ],
   wine: [
-    { name: "Bílé víno", abv: 0.12, volumes: [125, 200] },
-    { name: "Červené víno", abv: 0.13, volumes: [125, 200] },
-    { name: "Prosecco", abv: 0.11, volumes: [150] }
+    { name: "Bílé víno", abv: 0.12, volumes: [125, 200, 500] },
+    { name: "Červené víno", abv: 0.13, volumes: [125, 200, 500] },
+    { name: "Prosecco", abv: 0.11, volumes: [150, 200, 500] }
   ],
   spirits: [
-    { name: "Vodka", abv: 0.40, volumes: [40, 50] },
-    { name: "Rum", abv: 0.40, volumes: [40, 50] },
-    { name: "Slivovice", abv: 0.50, volumes: [40, 50] }
+    { name: "Vodka", abv: 0.40, volumes: [30, 40, 50, 100] },
+    { name: "Rum", abv: 0.40, volumes: [30, 40, 50, 100] },
+    { name: "Slivovice", abv: 0.50, volumes: [30, 40, 50, 100] }
   ]
 };
 
 const R = { male: 0.68, female: 0.55 };
-const ELIMINATION_PER_HOUR = 0.15; // Průměrné odbourávání v ČR
-const ABSORPTION_DEFICIT = 0.15;    // 15% alkoholové ztráty (resorpční deficit)
+const ELIMINATION_PER_HOUR = 0.15; 
+const ABSORPTION_DEFICIT = 0.15;    
 
 function App() {
   const [weight, setWeight] = useState("");
@@ -65,12 +65,19 @@ function App() {
   function removeDrink(index) {
     setDrinks(drinks.filter((_, i) => i !== index));
   }
+  function reset() {
+    setDrinks([]);       
+    setResult(null);     
+    setWeight("");       
+    setDrinkOption(null); 
+  }
 
   function calculate() {
-    const w = parseFloat(weight);
-    if (!w || w <= 0) {
-      alert("Zadejte platnou váhu.");
-      return;
+   const w = parseFloat(weight);
+
+  if (!w || w <= 0) {
+    alert("Zadejte platnou váhu (větší než 0 kg).");
+    return
     }
     if (drinks.length === 0) {
       alert("Přidejte alespoň jeden drink.");
@@ -79,14 +86,14 @@ function App() {
 
     const r = R[gender];
     
-    // Převedení drinků na momenty vstřebání
+    
     const drinkMoments = drinks.map(d => {
       const [h, m] = d.time.split(":");
       const date = new Date();
       date.setHours(parseInt(h), parseInt(m), 0, 0);
 
       const pureGrams = d.volume * d.abv * 0.789;
-      // Použití resorpčního deficitu dle české metodiky
+      
       const absorbedGrams = pureGrams * (1 - ABSORPTION_DEFICIT);
 
       return {
@@ -110,19 +117,19 @@ function App() {
       drinkMoments.forEach(d => {
         const diffMin = (currentTime - d.time) / (1000 * 60);
         
-        // Sumace reálných gramů pro info panel
+       
         if (i === 0) totalRealGrams += d.realGrams;
 
-        // Simulace vstřebávání (alkohol se v krvi objeví s mírným zpožděním)
+        
         if (Math.abs(diffMin - 30) < STEP_MIN / 2) {
           currentPromile += d.grams / (r * w);
         }
       });
 
-      // Plynulé odbourávání
+      
       currentPromile = Math.max(currentPromile - (ELIMINATION_PER_HOUR * STEP_MIN) / 60, 0);
 
-      // Ukládáme každou hodinu pro přehlednost grafu
+     
       if (i % (60 / STEP_MIN) === 0) {
         graphData.push({
           hour: currentTime.getHours().toString().padStart(2, '0') + ":00",
@@ -130,10 +137,10 @@ function App() {
         });
       }
       
-      // Pokud jsme na nule a už nejsou další drinky v budoucnu, můžeme smyčku ukončit dříve (volitelné)
+     
     }
 
-    // Výpočet času, kdy bude v krvi 0
+   
     const soberStepIndex = graphData.findIndex((d, idx) => idx > 0 && d.promile === 0);
     const hoursToSober = soberStepIndex !== -1 ? soberStepIndex : 24;
     const driveTime = new Date(start.getTime() + hoursToSober * 60 * 60 * 1000);
@@ -153,8 +160,19 @@ function App() {
         <h1>Widmarkova kalkulačka</h1>
         
         <div className="form-group">
-          <label>Váha (kg)</label>
-          <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="např. 80" />
+        <input 
+    type="number" 
+    min="0" 
+    value={weight} 
+    onChange={(e) => {
+      const val = e.target.value;
+    
+      if (val === "" || parseFloat(val) >= 0) {
+        setWeight(val);
+      }
+    }} 
+    placeholder="např. 80" 
+  />
         </div>
 
         <div className="form-group">
@@ -207,14 +225,26 @@ function App() {
             <div className="stats-grid">
               <div className="stat-box">
                 <small>Celkem vypito</small>
-                <p>{result.grams.toFixed(1)} g alk.</p>
+                <p>{result.grams.toFixed(1)} g alkoholu</p>
               </div>
               <div className="stat-box">
                 <small>Max. hladina</small>
                 <p>{result.maxPromile.toFixed(2)} ‰</p>
               </div>
             </div>
-
+<div className="button-group" style={{ display: 'flex', gap: '10px' }}>
+    <button className="calculate-btn" onClick={calculate}>
+      Vypočítat stav
+    </button>
+    
+    <button 
+      className="calculate-btn" 
+      onClick={reset} 
+      style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}
+    >
+      Smazat vše
+    </button>
+  </div>
             <div className="drive-info">
               <p>Střízlivost cca za: <strong>{result.hoursToSober} h</strong></p>
               <p>Řídit můžete v: <strong>{result.driveTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong></p>
